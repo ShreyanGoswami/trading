@@ -1,5 +1,6 @@
 use reqwest::header::{HeaderMap, HeaderValue};
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 // TODO models need to be moved out
 #[derive(Serialize, Deserialize)]
@@ -139,9 +140,9 @@ struct OpenPostionRequest {
 }
 
 #[derive(Serialize, Deserialize)]
-struct OpenPositionResponse {
+pub struct OpenPositionResponse {
     #[serde(rename = "id")]
-    id: String,
+    pub id: String,
 
     #[serde(rename = "client_order_id")]
     client_order_id: String,
@@ -180,7 +181,7 @@ struct OpenPositionResponse {
     asset_id: String,
 
     #[serde(rename = "symbol")]
-    symbol: String,
+    pub symbol: String,
 
     #[serde(rename = "asset_class")]
     asset_class: String,
@@ -189,10 +190,10 @@ struct OpenPositionResponse {
     notional: Option<serde_json::Value>,
 
     #[serde(rename = "qty")]
-    qty: String,
+    qty: Option<serde_json::Value>,
 
     #[serde(rename = "filled_qty")]
-    filled_qty: String,
+    filled_qty: Option<serde_json::Value>,
 
     #[serde(rename = "filled_avg_price")]
     filled_avg_price: Option<serde_json::Value>,
@@ -250,13 +251,6 @@ pub struct Client {
     api_secret: String,
 }
 
-pub struct BuyOrder<'a> {
-    pub share_symbol: &'a String,
-    pub share_quantity: &'a f32,
-    pub share_price: &'a f32,
-    pub status: bool,
-}
-
 impl Client {
     // Trading API reference - https://alpaca.markets/docs/api-references/trading-api/
 
@@ -291,7 +285,7 @@ impl Client {
         &self,
         stock_symbol: &String,
         amount: &f32,
-    ) -> Result<Option<BuyOrder>, Box<dyn std::error::Error>> {
+    ) -> Result<Option<OpenPositionResponse>, Box<dyn std::error::Error>> {
         /*
             Failures:
             403 - Forbidden
@@ -319,10 +313,11 @@ impl Client {
             .send()
             .await?;
         if !res.status().is_success() {
+            println!("Something went wrong when attempting to purchase shares of {}", stock_symbol);
             return Ok(None);
         }
-        let response_data = res.json::<OpenPositionResponse>().await?;
-        Ok(None)
+        println!("Successfully purchased {}", stock_symbol);
+        Ok(Some(res.json::<OpenPositionResponse>().await?))
     }
 
     pub async fn close_position(
@@ -339,7 +334,6 @@ impl Client {
             "{}/{}/{}?qty={}",
             self.base_url, "positions", stock_symbol, quantity
         );
-        println!("{}", query_url);
 
         let res = self
             .client
@@ -354,15 +348,25 @@ impl Client {
         Ok(true)
     }
 
+    pub async fn get_order(&self, order_id: &Uuid) -> Result<OpenPositionResponse, Box<dyn std::error::Error>> {
+        let query_url = format!("{}/orders/{}",self.base_url, order_id);
+        let res = self.client.get(query_url).headers(self.get_headers()).send().await?;
+        if !res.status().is_success() {
+            println!("Something went wrong. Status {:?}", res.status());
+        }
+        let response_data = res.json::<OpenPositionResponse>().await?;
+        Ok(response_data)
+    }
+
     fn get_headers(&self) -> HeaderMap {
         let mut headers = HeaderMap::new();
         headers.insert(
             "APCA-API-KEY-ID",
-            HeaderValue::from_str(&self.api_key).unwrap(),
+            HeaderValue::from_str(&self.api_key).unwrap(), // TODO remove this and use match
         );
         headers.insert(
             "APCA-API-SECRET-KEY",
-            HeaderValue::from_str(&self.api_secret).unwrap(),
+            HeaderValue::from_str(&self.api_secret).unwrap(), // TODO remove this and use match
         );
         headers
     }

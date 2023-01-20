@@ -1,19 +1,19 @@
-use crate::alpaca_trading_client::client::BuyOrder;
 use crate::alpaca_trading_client::client::Client;
+use uuid::{Uuid};
 
 pub struct BuySharesStatusVec {
-    shares_to_buy: Vec<String>,
-    quantity: Vec<f32>,
-    status: Vec<bool>,
-    share_price: Vec<f32>,
+    pub shares: Vec<String>,
+    pub prices: Vec<f32>,
+    pub status: Vec<bool>,
+    pub order_ids: Vec<Uuid>
 }
 
 impl<'a> BuySharesStatusVec {
-    pub fn push(&mut self, share: String, share_quantity: f32, share_price: f32, status: bool) {
-        self.shares_to_buy.push(share);
-        self.quantity.push(share_quantity);
-        self.share_price.push(share_price);
+    pub fn push(&mut self, share: String, order_amount : f32, order_id: Uuid, status: bool) {
+        self.shares.push(share);
+        self.prices.push(order_amount);
         self.status.push(status);
+        self.order_ids.push(order_id);
     }
 }
 
@@ -29,29 +29,32 @@ pub async fn buy_shares(
         total_money, money_spent_per_company
     );
     let mut buy_status = BuySharesStatusVec {
-        shares_to_buy: Vec::new(), // maybe a vector is not required because we know the number of shares to buy
+        shares: Vec::new(), // maybe a vector is not required because we know the number of shares to buy
+        prices: Vec::new(),
         status: Vec::new(),
-        quantity: Vec::new(),
-        share_price: Vec::new(),
+        order_ids: Vec::new(),
     };
     for share_symbol in shares_to_buy {
-        println!(
-            "Attempting to purchase {} for amount {}",
-            share_symbol, money_spent_per_company
-        );
         let res = match trading_client
             .open_position(&share_symbol, &money_spent_per_company)
             .await?
         {
             Some(buy_order) => {
                 buy_status.push(
-                    buy_order.share_symbol.to_string(),
-                    *buy_order.share_quantity,
-                    *buy_order.share_price,
-                    buy_order.status,
+                    buy_order.symbol.to_string(),
+                    money_spent_per_company,
+                    Uuid::parse_str(&buy_order.id.to_string()).unwrap(), // TODO remove this and use match
+                    true,
                 );
             }
-            None => {}
+            None => {
+                buy_status.push(
+                    share_symbol.to_string(),
+                    money_spent_per_company,
+                    Uuid::new_v4(), // since the position was not opened, we generate a random guid for now
+                    false,
+                );
+            }
         };
     }
     Ok(buy_status)
