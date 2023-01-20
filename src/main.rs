@@ -1,8 +1,5 @@
-mod alpaca_trading_client;
-use alpaca_trading_client::client::Client;
-
-mod investment_strategy;
-use investment_strategy::algorithm::buy_shares;
+use trading::alpaca_trading_client::client::Client;
+use trading::bookkeeping::book::Portfolio;
 
 use std::env;
 
@@ -24,11 +21,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
     let mut shares_to_buy = Vec::new();
     shares_to_buy.push(String::from("AMZN"));
-    shares_to_buy.push(String::from("GOOG"));
-    shares_to_buy.push(String::from("APPL"));
-    shares_to_buy.push(String::from("qwer"));
+    // shares_to_buy.push(String::from("O"));
+    shares_to_buy.push(String::from("AAPL"));
     let money_to_trade: f32 = 100.0;
-
+    let portfolio = Portfolio::execute_buy_order(&trading_client, &shares_to_buy, &money_to_trade).await?;
     Ok(())
     // read stock input from user
 
