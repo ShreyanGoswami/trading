@@ -10,11 +10,11 @@ use std::env;
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let api_key = match env::var("ALPACA_PAPER_API_KEY") {
         Ok(v) => v,
-        Err(e) => panic!("ALPACA api key not set")
+        Err(e) => panic!("ALPACA api key not set"),
     };
     let api_secret = match env::var("ALPACA_PAPER_API_SECRET") {
         Ok(v) => v,
-        Err(e) => panic!("ALPACA secret api key not set")
+        Err(e) => panic!("ALPACA secret api key not set"),
     };
     println!("{} {}", api_key, api_secret);
     let trading_client = Client::init_client(

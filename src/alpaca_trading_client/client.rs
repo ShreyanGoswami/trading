@@ -318,11 +318,11 @@ impl Client {
             .json(&request_body)
             .send()
             .await?;
-        if ! res.status().is_success() {
-            return Ok(None)
+        if !res.status().is_success() {
+            return Ok(None);
         }
         let response_data = res.json::<OpenPositionResponse>().await?;
-       Ok(None)
+        Ok(None)
     }
 
     pub async fn close_position(

@@ -1,11 +1,11 @@
-use crate::alpaca_trading_client::client::Client;
 use crate::alpaca_trading_client::client::BuyOrder;
+use crate::alpaca_trading_client::client::Client;
 
 pub struct BuySharesStatusVec {
     shares_to_buy: Vec<String>,
     quantity: Vec<f32>,
     status: Vec<bool>,
-    share_price: Vec<f32>
+    share_price: Vec<f32>,
 }
 
 impl<'a> BuySharesStatusVec {
@@ -39,16 +39,20 @@ pub async fn buy_shares(
             "Attempting to purchase {} for amount {}",
             share_symbol, money_spent_per_company
         );
-        let res  = match trading_client
+        let res = match trading_client
             .open_position(&share_symbol, &money_spent_per_company)
-            .await? {
-                Some(buy_order) => {
-                    buy_status.push(buy_order.share_symbol.to_string(), *buy_order.share_quantity, *buy_order.share_price, buy_order.status);
-                },
-                None => {
-
-                },
-            };
+            .await?
+        {
+            Some(buy_order) => {
+                buy_status.push(
+                    buy_order.share_symbol.to_string(),
+                    *buy_order.share_quantity,
+                    *buy_order.share_price,
+                    buy_order.status,
+                );
+            }
+            None => {}
+        };
     }
     Ok(buy_status)
 }
