@@ -28,7 +28,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     shares_to_buy.push(String::from("APPL"));
     shares_to_buy.push(String::from("qwer"));
     let money_to_trade: f32 = 100.0;
-    // buy_sell_amazon().await?;
 
     Ok(())
     // read stock input from user
@@ -45,30 +44,3 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // call API to sell a share that I don't own
 }
-
-// async fn buy_sell_amazon() -> Result<(), Box<dyn std::error::Error>> {
-//     println!("Checking balance");
-//     let trading_client = Client::init_client(
-//         &"https://paper-api.alpaca.markets/v2",
-//         &"PK9LN9JUKKAASLKF2JSA",
-//         &"MCJ7DAm7uw6gvSYb3DL3XeUAVbxCYfnjFarEiliX",
-//     );
-//     trading_client.check_balance().await?;
-//     println!("Getting stock info for Amazon");
-//     let stock_symbol = String::from("AMZN");
-//     let quantity = 1.00;
-
-//     println!("Attempting to buy shares");
-//     trading_client
-//         .open_position(&stock_symbol, &quantity)
-//         .await?;
-//     println!("Bought shares");
-
-//     println!("Selling the shares");
-//     trading_client
-//         .close_position(&stock_symbol, &quantity)
-//         .await?;
-//     println!("Sold shares");
-
-//     Ok(())
-// }
